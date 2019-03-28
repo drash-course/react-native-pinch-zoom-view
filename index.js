@@ -31,6 +31,8 @@ export default class PinchZoomView extends Component {
       lastMovePinch: false
     };
     this.distant = 150;
+    this.lastTapTs = 0;
+    this.didLift = false;
   }
 
   componentWillMount() {
@@ -45,8 +47,27 @@ export default class PinchZoomView extends Component {
     });
   }
 
+  zoomIn() {
+    const scale = this.state.scale * 1.45;
+    if (scale < this.props.maxScale) {
+      this.setState({ scale, lastScale: this.state.lastScale * 1.45 });
+    } else {
+      this.setState({ scale: this.props.maxScale, lastScale: this.props.maxScale });
+    }
+  }
+
+  _handleTouchLift = () => {
+    this.didLift = true;
+  }
+
   _handleStartShouldSetPanResponder = (e, gestureState) => {
     // don't respond to single touch to avoid shielding click on child components
+    const tapTs = Date.now();
+    if (gestureState.numberActiveTouches === 1 && this.didLift && (tapTs - this.lastTapTs) < 300) {
+      this.zoomIn();
+    }
+    this.didLift = false;
+    this.lastTapTs = tapTs;
     return false;
   };
 
@@ -112,6 +133,7 @@ export default class PinchZoomView extends Component {
   render() {
     return (
       <View
+        onTouchEnd={this._handleTouchLift}
         {...this.gestureHandlers.panHandlers}
         style={[
           styles.container,
