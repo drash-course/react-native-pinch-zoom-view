@@ -2,6 +2,8 @@
 
 A pinch-to-zoom view for React Native. All the components wrapped in the view is scalable while still be able to respond to touch events.
 
+Supports double-tap to zoom.
+
 ## Install
 
 `npm install react-native-pinch-zoom-view --save`
@@ -32,7 +34,7 @@ class APP extends Component {
 AppRegistry.registerComponent('APP', () => APP);
 ```
 
-## Properties
+## Props
 
 #### `scalable`
 
@@ -41,19 +43,25 @@ Default: `true`
 
 In some cases, you may want to disable the pinch-zoom behaviour, just set `scalable={false}` on the component.
 
-### `minScale`
+#### `minScale`
 
 Type: `Number`
 Default: `0.5`
 
 Minimum scaling.
 
-### `maxScale`
+#### `maxScale`
 
 Type: `Number`
 Default: `2`
 
 Maximum scaling.
+
+#### `shouldDismissPane`
+
+Type: `Function`
+
+Callback function that is invoqued when the PinchZoomView is touched or moved. Use it to let the parent component know that it should hide overlay menus.
 
 ## Example
 
