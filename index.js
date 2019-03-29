@@ -58,7 +58,7 @@ export default class PinchZoomView extends Component {
 
   _handleTouchLift = () => {
     this.didLift = true;
-  }
+  };
 
   _handleStartShouldSetPanResponder = (e, gestureState) => {
     // don't respond to single touch to avoid shielding click on child components
@@ -72,12 +72,13 @@ export default class PinchZoomView extends Component {
   };
 
   _handleMoveShouldSetPanResponder = (e, gestureState) => {
-    return (
+    const shouldSet = (
       this.props.scalable &&
       (Math.abs(gestureState.dx) > 2 ||
         Math.abs(gestureState.dy) > 2 ||
         gestureState.numberActiveTouches === 2)
     );
+    return shouldSet;
   };
 
   _handlePanResponderGrant = (e, gestureState) => {
@@ -88,8 +89,7 @@ export default class PinchZoomView extends Component {
       let dy = Math.abs(
         e.nativeEvent.touches[0].pageY - e.nativeEvent.touches[1].pageY
       );
-      let distant = Math.sqrt(dx * dx + dy * dy);
-      this.distant = distant;
+      this.distant = Math.sqrt(dx * dx + dy * dy);
     }
   };
 
@@ -130,11 +130,19 @@ export default class PinchZoomView extends Component {
     }
   };
 
+  _handleStartShouldSetResponder = () => {
+    if (this.props.shouldDismissMenu) {
+      this.props.shouldDismissMenu();
+    }
+    return false;
+  };
+
   render() {
     return (
       <View
         onTouchEnd={this._handleTouchLift}
         {...this.gestureHandlers.panHandlers}
+        onStartShouldSetResponder={this._handleStartShouldSetResponder}
         style={[
           styles.container,
           this.props.style,
