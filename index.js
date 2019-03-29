@@ -68,6 +68,9 @@ export default class PinchZoomView extends Component {
     }
     this.didLift = false;
     this.lastTapTs = tapTs;
+    if (this.props.shouldDismissPane) {
+      this.props.shouldDismissPane();
+    }
     return false;
   };
 
@@ -130,19 +133,11 @@ export default class PinchZoomView extends Component {
     }
   };
 
-  _handleStartShouldSetResponder = () => {
-    if (this.props.shouldDismissMenu) {
-      this.props.shouldDismissMenu();
-    }
-    return false;
-  };
-
   render() {
     return (
       <View
         onTouchEnd={this._handleTouchLift}
         {...this.gestureHandlers.panHandlers}
-        onStartShouldSetResponder={this._handleStartShouldSetResponder}
         style={[
           styles.container,
           this.props.style,
