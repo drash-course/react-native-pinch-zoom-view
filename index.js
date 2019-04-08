@@ -67,7 +67,7 @@ export default class PinchZoomView extends Component {
     if (
       gestureState.numberActiveTouches === 1 &&
       this.lastLiftLocation &&
-      (tapTs - this.lastTapTs) < 200
+      (tapTs - this.lastTapTs) < 300
     ) {
       const [lx, ly] = this.lastLiftLocation;
       const x = e.nativeEvent.pageX;
