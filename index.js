@@ -28,11 +28,12 @@ export default class PinchZoomView extends Component {
       offsetY: 0,
       lastX: 0,
       lastY: 0,
-      lastMovePinch: false
+      lastMovePinch: false,
     };
     this.distant = 150;
+    this.angleDeg = 0;
     this.lastTapTs = 0;
-    this.didLift = false;
+    this.lastLiftLocation = null;
   }
 
   componentWillMount() {
@@ -56,17 +57,26 @@ export default class PinchZoomView extends Component {
     }
   }
 
-  _handleTouchLift = () => {
-    this.didLift = true;
+  _handleTouchLift = ({ nativeEvent }) => {
+    this.lastLiftLocation = [nativeEvent.pageX, nativeEvent.pageY];
   };
 
   _handleStartShouldSetPanResponder = (e, gestureState) => {
     // don't respond to single touch to avoid shielding click on child components
     const tapTs = Date.now();
-    if (gestureState.numberActiveTouches === 1 && this.didLift && (tapTs - this.lastTapTs) < 300) {
-      this.zoomIn();
+    if (
+      gestureState.numberActiveTouches === 1 &&
+      this.lastLiftLocation &&
+      (tapTs - this.lastTapTs) < 200
+    ) {
+      const [lx, ly] = this.lastLiftLocation;
+      const x = e.nativeEvent.pageX;
+      const y = e.nativeEvent.pageY;
+      if (Math.abs(lx - x) < 10 && Math.abs(ly - y) < 10) {
+        this.zoomIn();
+      }
     }
-    this.didLift = false;
+    this.lastLiftLocation = null;
     this.lastTapTs = tapTs;
     if (this.props.shouldDismissPane) {
       this.props.shouldDismissPane();
@@ -86,12 +96,8 @@ export default class PinchZoomView extends Component {
 
   _handlePanResponderGrant = (e, gestureState) => {
     if (gestureState.numberActiveTouches === 2) {
-      let dx = Math.abs(
-        e.nativeEvent.touches[0].pageX - e.nativeEvent.touches[1].pageX
-      );
-      let dy = Math.abs(
-        e.nativeEvent.touches[0].pageY - e.nativeEvent.touches[1].pageY
-      );
+      let dx = e.nativeEvent.touches[0].pageX - e.nativeEvent.touches[1].pageX;
+      let dy = e.nativeEvent.touches[0].pageY - e.nativeEvent.touches[1].pageY;
       this.distant = Math.sqrt(dx * dx + dy * dy);
     }
   };
@@ -100,21 +106,17 @@ export default class PinchZoomView extends Component {
     this.setState({
       lastX: this.state.offsetX,
       lastY: this.state.offsetY,
-      lastScale: this.state.scale
+      lastScale: this.state.scale,
     });
   };
 
   _handlePanResponderMove = (e, gestureState) => {
     // zoom
     if (gestureState.numberActiveTouches === 2) {
-      let dx = Math.abs(
-        e.nativeEvent.touches[0].pageX - e.nativeEvent.touches[1].pageX
-      );
-      let dy = Math.abs(
-        e.nativeEvent.touches[0].pageY - e.nativeEvent.touches[1].pageY
-      );
+      let dx = e.nativeEvent.touches[0].pageX - e.nativeEvent.touches[1].pageX;
+      let dy = e.nativeEvent.touches[0].pageY - e.nativeEvent.touches[1].pageY;
       let distant = Math.sqrt(dx * dx + dy * dy);
-      let scale = (distant / this.distant) * this.state.lastScale;
+      const scale = (distant / this.distant) * this.state.lastScale;
       //check scale min to max hello
       if (scale < this.props.maxScale && scale > this.props.minScale) {
         this.setState({ scale, lastMovePinch: true });
@@ -136,22 +138,25 @@ export default class PinchZoomView extends Component {
   render() {
     return (
       <View
+        style={styles.container}
         onTouchEnd={this._handleTouchLift}
         {...this.gestureHandlers.panHandlers}
-        style={[
-          styles.container,
-          this.props.style,
-          {
-            transform: [
-              { scaleX: this.state.scale },
-              { scaleY: this.state.scale },
-              { translateX: this.state.offsetX },
-              { translateY: this.state.offsetY }
-            ]
-          }
-        ]}
       >
-        {this.props.children}
+        <View
+          style={[
+            this.props.style,
+            {
+              transform: [
+                { scaleX: this.state.scale },
+                { scaleY: this.state.scale },
+                { translateX: this.state.offsetX },
+                { translateY: this.state.offsetY },
+              ]
+            }
+          ]}
+        >
+          {this.props.children}
+        </View>
       </View>
     );
   }
